@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchWeatherRequest } from '../redux/weatherActions';
+import Loading from "./Loading.jsx";
 
 const WeatherDisplay = () => {
     const dispatch = useDispatch();
@@ -37,7 +38,7 @@ const WeatherDisplay = () => {
                 </button>
             </form>
 
-            {loading && <p className="text-center text-gray-500">Memuat data cuaca...</p>}
+            {loading && <Loading/>}
             {error && <p className="text-center text-red-500">Gagal memuat data: {error}</p>}
             {data && (
                 <div className="text-center">

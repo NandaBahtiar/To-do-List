@@ -8,7 +8,6 @@ const WeatherDisplay = () => {
     const [location, setLocation] = useState('Jakarta');
 
     useEffect(() => {
-        // Kirim request dengan lokasi default saat pertama kali dimuat
         dispatch(fetchWeatherRequest(location));
     }, [dispatch]);
 

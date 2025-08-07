@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-// Pastikan Anda mengimpor action creator yang benar untuk Saga
 import { addTaskRequest } from '../redux/taskActions';
 
 const TodoForm = () => {
-    // State lokal untuk mengelola input dari pengguna
     const [text, setText] = useState('');
     const [category, setCategory] = useState('Personal');
 
-    // Hook untuk mengirim aksi ke Redux
     const dispatch = useDispatch();
 
-    // Fungsi yang dijalankan saat form di-submit
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!text.trim()) return;
@@ -23,7 +19,6 @@ const TodoForm = () => {
             completed: false,
         };
 
-        // Pastikan baris ini yang Anda gunakan
         dispatch(addTaskRequest(newTask));
 
         setText('');

@@ -1,12 +1,24 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import TodoItem from './TodoItem';
-import TodoFilter from './TodoFilter'; // Impor komponen filter
-
+import TodoFilter from './TodoFilter';
+import { useDispatch } from 'react-redux';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { reorderTasks } from '../redux/taskActions';
 const TodoList = () => {
     const { tasks } = useSelector(state => state.tasks);
     const filters = useSelector(state => state.filters);
+    const dispatch = useDispatch();
 
+    const handleOnDragEnd = (result) => {
+        if (!result.destination) return;
+
+        const items = Array.from(filteredTasks);
+        const [reorderedItem] = items.splice(result.source.index, 1);
+        items.splice(result.destination.index, 0, reorderedItem);
+
+        dispatch(reorderTasks(items));
+    };
     const filteredTasks = tasks.filter(task => {
         const statusMatch = filters.status === 'all' || (filters.status === 'completed' ? task.completed : !task.completed);
         const categoryMatch = filters.category === 'all' || task.category === filters.category;
@@ -16,19 +28,27 @@ const TodoList = () => {
     });
 
     return (
-        <div>
-            <TodoFilter />
-            <h2 className="text-xl font-semibold text-gray-700 mb-4">Daftar Tugas</h2>
-            {filteredTasks.length > 0 ? (
-                <div className="space-y-3">
-                    {filteredTasks.map(task => (
-                        <TodoItem key={task.id} task={task} />
-                    ))}
-                </div>
-            ) : (
-                <p className="text-gray-500 text-center py-4">Tidak ada tugas yang cocok dengan filter Anda. 🎉</p>
-            )}
-        </div>
+        <DragDropContext onDragEnd={handleOnDragEnd}>
+            <Droppable droppableId="tasks-list">
+                {(provided) => (
+                    <div {...provided.droppableProps} ref={provided.innerRef}>
+                        {filteredTasks.map((task, index) => (
+                            <Draggable key={task.id} draggableId={String(task.id)} index={index}>
+                                {(provided) => (
+                                    <TodoItem
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        task={task}
+                                    />
+                                )}
+                            </Draggable>
+                        ))}
+                        {provided.placeholder}
+                    </div>
+                )}
+            </Droppable>
+        </DragDropContext>
     );
 };
 

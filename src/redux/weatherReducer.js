@@ -1,4 +1,3 @@
-// src/redux/weatherReducer.js
 import * as actionTypes from './actionTypes';
 
 const initialState = { data: null, loading: false, error: null };

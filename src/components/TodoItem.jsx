@@ -1,8 +1,8 @@
-import React, {useState} from 'react';
+import React, {forwardRef, useState} from 'react';
 import { useDispatch } from 'react-redux';
 import {toggleTaskComplete, deleteTask, editTaskRequest} from '../redux/taskActions';
 
-const TodoItem = ({ task }) => {
+const TodoItem = forwardRef(({ task, ...props }, ref) => {
     const dispatch = useDispatch();
 
     const handleToggle = () => {
@@ -23,12 +23,11 @@ const TodoItem = ({ task }) => {
         setIsEditing(false);
     };
     return (
-        <div className={`flex items-center p-3 bg-gray-50 rounded-lg border-l-4 transition-all ${borderColorClass}`}>
-            {/* Checkbox sekarang interaktif */}
+        <div  ref={ref} {...props} className={`flex items-center p-3 my-5 bg-gray-50 rounded-lg border-l-4 transition-all ${borderColorClass}`}>
             <input
                 type="checkbox"
                 checked={task.completed}
-                onChange={handleToggle} // 👈 Panggil handleToggle saat diubah
+                onChange={handleToggle}
                 className="h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 mr-4 cursor-pointer"
             />
             <div className="flex-1">
@@ -62,6 +61,6 @@ const TodoItem = ({ task }) => {
             </button>
         </div>
     );
-};
+});
 
 export default TodoItem;

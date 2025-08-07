@@ -5,8 +5,8 @@ const initialState = {
         { id: 1, text: 'Selesaikan setup Redux', category: 'Work', completed: true },
         { id: 2, text: 'Buat komponen UI', category: 'Work', completed: false },
     ],
-    loading: false, // 👈 Tambahkan state loading
-    error: null,    // 👈 Tambahkan state error
+    loading: false,
+    error: null,
 };
 const taskReducer = (state = initialState, action) => {
     switch (action.type) {
@@ -41,9 +41,14 @@ const taskReducer = (state = initialState, action) => {
                 ...state,
                 tasks: state.tasks.map(task =>
                     task.id === action.payload.id
-                        ? action.payload // Ganti dengan data baru
-                        : task           // Biarkan seperti semula
+                        ? action.payload
+                        : task
                 ),
+            };
+        case actionTypes.REORDER_TASKS:
+            return {
+                ...state,
+                tasks: action.payload,
             };
         default:
             return state;

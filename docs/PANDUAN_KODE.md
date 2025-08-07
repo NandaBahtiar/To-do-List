@@ -12,7 +12,8 @@ Dokumen ini memberikan panduan teknis dan konvensi yang digunakan dalam proyek i
 6.  [Langkah-Langkah Membuat Fitur Redux Baru](#langkah-langkah-membuat-fitur-redux-baru)
 7.  [Panduan: Menambahkan Fitur Edit Tugas](#panduan-menambahkan-fitur-edit-tugas)
 8.  [Panduan: Fetching Data Cuaca (Contoh API Call)](#panduan-fetching-data-cuaca-contoh-api-call)
-9.  [Contoh Praktis](#contoh-praktis)
+9.  [Panduan: Implementasi Drag-and-Drop](#panduan-implementasi-drag-and-drop)
+10. [Contoh Praktis](#contoh-praktis)
 
 ---
 
@@ -78,179 +79,129 @@ Dokumen ini memberikan panduan teknis dan konvensi yang digunakan dalam proyek i
 
 ## Panduan: Fetching Data Cuaca (Contoh API Call)
 
-Berikut adalah langkah-langkah rinci untuk menambahkan fitur baru yang mengambil data dari API.
-
-### Langkah 1: Buat Lapisan API
-
-Buat file baru `src/api/weatherAPI.js`.
-
-```javascript
-// src/api/weatherAPI.js
-import axios from 'axios';
-
-const WEATHER_API_URL = 'https://wttr.in/Jakarta?format=j1';
-
-export const fetchWeatherAPI = () => {
-    return axios.get(WEATHER_API_URL);
-};
-```
-
-### Langkah 2: Definisikan Action Types
-
-Buka `src/redux/actionTypes.js` dan tambahkan:
-
-```javascript
-// Weather Actions
-export const FETCH_WEATHER_REQUEST = 'FETCH_WEATHER_REQUEST';
-export const FETCH_WEATHER_SUCCESS = 'FETCH_WEATHER_SUCCESS';
-export const FETCH_WEATHER_FAILURE = 'FETCH_WEATHER_FAILURE';
-```
-
-### Langkah 3: Buat Action Creators
-
-Buat file baru `src/redux/weatherActions.js`.
-
-```javascript
-// src/redux/weatherActions.js
-import * as actionTypes from './actionTypes';
-
-export const fetchWeatherRequest = () => ({ type: actionTypes.FETCH_WEATHER_REQUEST });
-export const fetchWeatherSuccess = (data) => ({ type: actionTypes.FETCH_WEATHER_SUCCESS, payload: data });
-export const fetchWeatherFailure = (error) => ({ type: actionTypes.FETCH_WEATHER_FAILURE, payload: error });
-```
-
-### Langkah 4: Buat Reducer Cuaca
-
-Buat file baru `src/redux/weatherReducer.js`.
-
-```javascript
-// src/redux/weatherReducer.js
-import * as actionTypes from './actionTypes';
-
-const initialState = { data: null, loading: false, error: null };
-
-const weatherReducer = (state = initialState, action) => {
-    switch (action.type) {
-        case actionTypes.FETCH_WEATHER_REQUEST:
-            return { ...state, loading: true, error: null };
-        case actionTypes.FETCH_WEATHER_SUCCESS:
-            return { ...state, loading: false, data: action.payload };
-        case actionTypes.FETCH_WEATHER_FAILURE:
-            return { ...state, loading: false, error: action.payload };
-        default:
-            return state;
-    }
-};
-
-export default weatherReducer;
-```
-
-### Langkah 5: Buat Saga Cuaca
-
-Buat file baru `src/redux/weatherSaga.js`.
-
-```javascript
-// src/redux/weatherSaga.js
-import { call, put, takeLatest, all } from 'redux-saga/effects';
-import * as actionTypes from './actionTypes';
-import { fetchWeatherSuccess, fetchWeatherFailure } from './weatherActions';
-import { fetchWeatherAPI } from '../api/weatherAPI';
-
-function* fetchWeatherSaga() {
-    try {
-        const response = yield call(fetchWeatherAPI);
-        yield put(fetchWeatherSuccess(response.data));
-    } catch (error) {
-        yield put(fetchWeatherFailure(error.message));
-    }
-}
-
-function* watchFetchWeather() {
-    yield takeLatest(actionTypes.FETCH_WEATHER_REQUEST, fetchWeatherSaga);
-}
-
-export default function* weatherSaga() {
-    yield all([ watchFetchWeather() ]);
-}
-```
-
-### Langkah 6: Integrasikan ke Store & Root Saga
-
-1.  **Update `src/redux/store.js`**:
-    ```javascript
-    // ... imports
-    import weatherReducer from "./weatherReducer.js"; // <-- Impor
-
-    const rootReducer = combineReducers({
-        tasks: taskReducer,
-        filters: filterReducer,
-        weather: weatherReducer, // <-- Tambahkan
-    });
-    // ...
-    ```
-
-2.  **Update `src/redux/rootSaga.js`**:
-    ```javascript
-    // ... imports
-    import weatherSaga from './weatherSaga'; // <-- Impor
-
-    export default function* rootSaga() {
-        yield all([
-            taskSaga(),
-            weatherSaga(), // <-- Tambahkan
-        ]);
-    }
-    ```
-
-### Langkah 7: Buat Komponen UI & Picu Fetch
-
-1.  **Buat file `src/components/WeatherDisplay.jsx`**. Komponen ini bertanggung jawab untuk memicu fetch datanya sendiri dan menampilkannya.
-    ```javascript
-    import React, { useEffect } from 'react';
-    import { useSelector, useDispatch } from 'react-redux';
-    import { fetchWeatherRequest } from '../redux/weatherActions';
-
-    const WeatherDisplay = () => {
-        const dispatch = useDispatch();
-        const { data, loading, error } = useSelector(state => state.weather);
-
-        useEffect(() => {
-            dispatch(fetchWeatherRequest());
-        }, [dispatch]);
-
-        if (loading) return <p>Memuat data cuaca...</p>;
-        if (error) return <p>Gagal memuat data cuaca.</p>;
-        if (!data) return null;
-
-        const current = data.current_condition[0];
-        return (
-            <div className="p-4 mb-6 bg-blue-50 rounded-lg text-center">
-                <h3>Cuaca di {data.nearest_area[0].areaName[0].value}</h3>
-                <p>{current.weatherDesc[0].value}, {current.temp_C}°C</p>
-            </div>
-        );
-    };
-
-    export default WeatherDisplay;
-    ```
-
-2.  **Update `src/App.jsx`** untuk menampilkan komponen tersebut:
-    ```javascript
-    // ... imports
-    import WeatherDisplay from './components/WeatherDisplay';
-
-    function App() {
-        return (
-            <div className="...">
-                <header>...</header>
-                <WeatherDisplay /> {/* <-- Cukup tambahkan komponen */}
-                <main>...</main>
-            </div>
-        );
-    }
-    ```
+(Panduan ini menjelaskan cara menambahkan fitur baru yang mengambil data dari API.)
 
 ---
+
+## Panduan: Implementasi Drag-and-Drop
+
+Berikut adalah langkah-langkah rinci untuk menambahkan fungsionalitas seret dan lepas (*drag-and-drop*) ke daftar tugas menggunakan `@hello-pangea/dnd`.
+
+### Langkah 1: Persiapan Redux (Actions & Reducer)
+
+1.  **Definisikan Action Type Baru**
+    -   **Tujuan**: Membuat "perintah" baru untuk mengubah urutan tugas.
+    -   **File**: `src/redux/actionTypes.js`
+    -   **Kode**:
+        ```javascript
+        export const REORDER_TASKS = 'REORDER_TASKS';
+        ```
+
+2.  **Buat Action Creator**
+    -   **Tujuan**: Membuat fungsi "pabrik" untuk perintah di atas.
+    -   **File**: `src/redux/taskActions.js`
+    -   **Kode**:
+        ```javascript
+        export const reorderTasks = (tasks) => ({
+            type: actionTypes.REORDER_TASKS,
+            payload: tasks,
+        });
+        ```
+
+3.  **Update Reducer**
+    -   **Tujuan**: Mengajari `taskReducer` cara menangani perintah `REORDER_TASKS`.
+    -   **File**: `src/redux/taskReducer.js`
+    -   **Kode** (di dalam `switch`):
+        ```javascript
+        case actionTypes.REORDER_TASKS:
+            return {
+                ...state,
+                tasks: action.payload, // Ganti array lama dengan yang baru
+            };
+        ```
+
+### Langkah 2: Persiapan Komponen Item (`TodoItem.jsx`)
+
+-   **Tujuan**: Memungkinkan komponen `TodoItem` untuk "dipegang" oleh pustaka DnD.
+-   **File**: `src/components/TodoItem.jsx`
+-   **Apa yang harus dilakukan**: Bungkus definisi komponen dengan `React.forwardRef` dan teruskan `ref` serta `props` lainnya ke elemen pembungkus utama.
+    ```javascript
+    import React, { useState, forwardRef } from 'react';
+    // ... import lainnya
+
+    const TodoItem = forwardRef(({ task, ...props }, ref) => {
+        // ... logika internal komponen ...
+
+        return (
+            <div ref={ref} {...props} className={`...`}>
+                {/* ... JSX internal ... */}
+            </div>
+        );
+    });
+
+    export default TodoItem;
+    ```
+
+### Langkah 3: Implementasi Inti di `TodoList.jsx`
+
+1.  **Impor Pustaka dan Hook**
+    -   **File**: `src/components/TodoList.jsx`
+    -   **Kode**:
+        ```javascript
+        import { useDispatch } from 'react-redux';
+        import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+        import { reorderTasks } from '../redux/taskActions';
+        ```
+
+2.  **Buat Fungsi `handleOnDragEnd`**
+    -   **Tujuan**: Menangani logika setelah pengguna selesai menyeret.
+    -   **File**: `src/components/TodoList.jsx` (di dalam komponen)
+    -   **Kode**:
+        ```javascript
+        const dispatch = useDispatch();
+
+        const handleOnDragEnd = (result) => {
+            if (!result.destination) return;
+
+            const items = Array.from(filteredTasks);
+            const [reorderedItem] = items.splice(result.source.index, 1);
+            items.splice(result.destination.index, 0, reorderedItem);
+
+            dispatch(reorderTasks(items));
+        };
+        ```
+
+3.  **Bungkus JSX dengan Komponen DnD**
+    -   **Tujuan**: Mengaktifkan area DnD dan item yang dapat diseret.
+    -   **File**: `src/components/TodoList.jsx`
+    -   **Struktur JSX**:
+        ```jsx
+        <DragDropContext onDragEnd={handleOnDragEnd}>
+            <Droppable droppableId="tasks-list">
+                {(provided) => (
+                    <div {...provided.droppableProps} ref={provided.innerRef}>
+                        {filteredTasks.map((task, index) => (
+                            <Draggable key={task.id} draggableId={String(task.id)} index={index}>
+                                {(provided) => (
+                                    <TodoItem
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        task={task}
+                                    />
+                                )}
+                            </Draggable>
+                        ))}
+                        {provided.placeholder}
+                    </div>
+                )}
+            </Droppable>
+        </DragDropContext>
+        ```
+
+---
+
+## Contoh Praktis
 
 ## Contoh Praktis
 

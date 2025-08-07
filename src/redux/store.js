@@ -8,12 +8,13 @@ import filterReducer from "./filterReducer.js";
 
 // Impor rootSaga yang sudah digabung
 import rootSaga from "./rootSaga.js";
+import weatherReducer from "./weatherReducer.js";
 
 // Gabungkan SEMUA reducer
 const rootReducer = combineReducers({
     tasks: taskReducer,
     filters: filterReducer,
-    // weather: weatherReducer,
+    weather: weatherReducer,
 });
 
 const sagaMiddleware = createSagaMiddleware();

@@ -11,9 +11,12 @@ const TodoList = () => {
     const dispatch = useDispatch();
 
     const handleOnDragEnd = (result) => {
-        if (!result.destination) return;
+        const isFiltered = filters.status !== 'all' || filters.category !== 'all' || filters.keyword !== '';
 
-        const items = Array.from(filteredTasks);
+        // Nonaktifkan reorder jika ada filter yang aktif untuk mencegah data loss
+        if (!result.destination || isFiltered) return;
+
+        const items = Array.from(tasks); // Gunakan tasks asli, bukan filteredTasks
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0, reorderedItem);
 

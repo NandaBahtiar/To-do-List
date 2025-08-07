@@ -1,6 +1,7 @@
 import TodoList from './components/TodoList';
 import TodoForm from "./components/TodoForm.jsx";
 import WeatherDisplay from "./components/WeatherDisplay.jsx";
+import TodoFilter from "./components/TodoFilter.jsx";
 
 function App() {
     return (
@@ -13,7 +14,9 @@ function App() {
             </header>
             <WeatherDisplay />
             <main>
+
                 <TodoForm />
+                <TodoFilter/>
                 <TodoList />
 
             </main>
